@@ -1,0 +1,42 @@
+LVS  
+4层均衡
+IP跟port来进行负载，工作效率高。  无法实现动静分离
+
+
+haproxy
+7层
+根据url来进行负载，实现动静分离
+
+nginx
+7层
+根据url来进行负载，实现动静分离
+
+
+
+LVS NAT模式
+网络模式限制20台服务器
+
+LVS DR 直接路由模式
+调度算法
+1 RR  轮询
+2 WRR 权重轮询
+3 DH  目标地址hash  IP_hash访问固定服务器
+4 SH  源地址hash
+  与nginx的负载均衡方式类似
+需要给lVS机器增加虚拟IP，并配置转发条目，规则。
+
+
+keepalived检测nginx进程脚本
+#!/bin/bash
+#检查nginx进程是否存在
+counter=$(ps -C nginx --no-heading|wc-l)
+ if [ "${counter}" = "0" ]; then
+ #尝试启动一次nginx，休眠5秒后再次检测
+    systemctl start nginx
+	sleep 5
+	counter=$(ps -C nginx --no-heading|wc-l)
+	if [ "${counter}" = "0" ]; then
+	#如果nginx没启动成功，就杀掉keepalived，出发准备切换
+	  systemctl stop keepalived
+	fi
+  fi
